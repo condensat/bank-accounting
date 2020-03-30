@@ -1,6 +1,6 @@
 github.com/bsm/redislock v0.5.0/go.mod h1:qagqKlV+xiLy26iV34Y3zRPxRcJjQYbV7pZfWFeSZ8M=
-github.com/condensat/bank-core v0.0.1-0.20200327120000-d6c1e496cb51 h1:FlXoo0R0pId4b0Ha1i7wIwxhFjj7pM0Li0N9P6QtMEM=
-github.com/condensat/bank-core v0.0.1-0.20200327120000-d6c1e496cb51/go.mod h1:Cve+GA3XIUQFTR4lDAaf+oCvD2WkjDky1q39cyVWdiQ=
+github.com/condensat/bank-core v0.0.1-0.20200330150000-bb51a2e3a6ba h1:QwAOM6Cy7FeyvfN0w0RlMiKITkqxr0R4GnHQs9uzB0s=
+github.com/condensat/bank-core v0.0.1-0.20200330150000-bb51a2e3a6ba/go.mod h1:Cve+GA3XIUQFTR4lDAaf+oCvD2WkjDky1q39cyVWdiQ=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/denisenkom/go-mssqldb v0.0.0-20191124224453-732737034ffd/go.mod h1:xbL0rPBG9cCiLr28tMa8zpbdarY27NDyej4t/EjAShU=
