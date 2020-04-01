@@ -43,6 +43,7 @@ type AccountEntry struct {
 
 	AccountID        uint64
 	Currency         string
+	ReferenceID      uint64
 	OperationType    string
 	SynchroneousType string
 
@@ -100,6 +101,14 @@ func (p *UserAccounts) Encode() ([]byte, error) {
 }
 
 func (p *UserAccounts) Decode(data []byte) error {
+	return bank.DecodeObject(data, bank.BankObject(p))
+}
+
+func (p *AccountEntry) Encode() ([]byte, error) {
+	return bank.EncodeObject(p)
+}
+
+func (p *AccountEntry) Decode(data []byte) error {
 	return bank.DecodeObject(data, bank.BankObject(p))
 }
 
