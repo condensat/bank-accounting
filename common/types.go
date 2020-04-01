@@ -29,6 +29,9 @@ type UserAccounts struct {
 }
 
 type AccountEntry struct {
+	OperationID     uint64
+	OperationPrevID uint64
+
 	AccountID        uint64
 	Currency         string
 	OperationType    string
