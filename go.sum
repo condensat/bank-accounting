@@ -6,8 +6,8 @@ github.com/andybalholm/cascadia v1.1.0/go.mod h1:GsXiBklL0woXo1j/WYWtSYYC4ouU9Pq
 github.com/bsm/redislock v0.5.0/go.mod h1:qagqKlV+xiLy26iV34Y3zRPxRcJjQYbV7pZfWFeSZ8M=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
-github.com/condensat/bank-core v0.0.2-0.20200508120000-14875b435598 h1:wE3idXXL4IMT0x91WujnR8wsBEF2SRgxILCY9rMVwio=
-github.com/condensat/bank-core v0.0.2-0.20200508120000-14875b435598/go.mod h1:gsHzRNCqknvwCvrEO3yC9w74tPXDPFsvlvZ2w9HI11c=
+github.com/condensat/bank-core v0.0.2-0.20200509070000-087baf49435b h1:4EUzr6xSp8SzAJDTjhIWaNHJkVDp8X8rU2ZZSXO5ep0=
+github.com/condensat/bank-core v0.0.2-0.20200509070000-087baf49435b/go.mod h1:gsHzRNCqknvwCvrEO3yC9w74tPXDPFsvlvZ2w9HI11c=
 github.com/condensat/secureid v0.1.0 h1:x08lPpKf+qNZXvCIWkMF90l94tH5KgehXIV2vuWqi98=
 github.com/condensat/secureid v0.1.0/go.mod h1:uK99gtR8BlxJH7dw+f6Rd7mJ2OgvAUlTUA49ASfxLcM=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
