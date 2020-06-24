@@ -3,7 +3,7 @@ module github.com/condensat/bank-accounting
 go 1.14
 
 require (
-	github.com/condensat/bank-core v0.0.4-0.20200623160000-d99475601af9
+	github.com/condensat/bank-core v0.0.4-0.20200624130000-be97e7c74612
 	github.com/google/uuid v1.1.2 // indirect
 	github.com/jinzhu/gorm v1.9.16 // indirect
 	github.com/nats-io/nats.go v1.10.0 // indirect
