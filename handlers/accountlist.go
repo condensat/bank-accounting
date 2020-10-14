@@ -8,15 +8,15 @@ import (
 	"context"
 
 	"github.com/condensat/bank-core/appcontext"
+	"github.com/condensat/bank-core/cache"
 	"github.com/condensat/bank-core/logger"
+	"github.com/condensat/bank-core/messaging"
 
 	"github.com/condensat/bank-accounting/common"
 
-	"github.com/condensat/bank-core"
-	"github.com/condensat/bank-core/cache"
 	"github.com/condensat/bank-core/database"
 	"github.com/condensat/bank-core/database/model"
-	"github.com/condensat/bank-core/messaging"
+	"github.com/condensat/bank-core/database/query"
 
 	"github.com/sirupsen/logrus"
 )
@@ -38,8 +38,8 @@ func AccountList(ctx context.Context, userID uint64) ([]common.AccountInfo, erro
 
 	// Database Query
 	db := appcontext.Database(ctx)
-	err = db.Transaction(func(db bank.Database) error {
-		accounts, err := database.GetAccountsByUserAndCurrencyAndName(db, model.UserID(userID), "*", "*")
+	err = db.Transaction(func(db database.Context) error {
+		accounts, err := query.GetAccountsByUserAndCurrencyAndName(db, model.UserID(userID), "*", "*")
 		if err != nil {
 			return err
 		}
@@ -65,15 +65,15 @@ func AccountList(ctx context.Context, userID uint64) ([]common.AccountInfo, erro
 	return result, err
 }
 
-func OnAccountList(ctx context.Context, subject string, message *bank.Message) (*bank.Message, error) {
+func OnAccountList(ctx context.Context, subject string, message *messaging.Message) (*messaging.Message, error) {
 	log := logger.Logger(ctx).WithField("Method", "Accounting.OnAccountList")
 	log = log.WithFields(logrus.Fields{
 		"Subject": subject,
 	})
 
 	var request common.UserAccounts
-	return messaging.HandleRequest(ctx, message, &request,
-		func(ctx context.Context, _ bank.BankObject) (bank.BankObject, error) {
+	return messaging.HandleRequest(ctx, appcontext.AppName(ctx), message, &request,
+		func(ctx context.Context, _ messaging.BankObject) (messaging.BankObject, error) {
 			log = log.WithFields(logrus.Fields{
 				"UserID": request.UserID,
 			})

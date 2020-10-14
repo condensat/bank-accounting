@@ -8,14 +8,14 @@ import (
 	"context"
 
 	"github.com/condensat/bank-core/appcontext"
+	"github.com/condensat/bank-core/cache"
+	"github.com/condensat/bank-core/database"
 	"github.com/condensat/bank-core/logger"
+	"github.com/condensat/bank-core/messaging"
 
 	"github.com/condensat/bank-accounting/common"
 
-	"github.com/condensat/bank-core"
-	"github.com/condensat/bank-core/cache"
-	"github.com/condensat/bank-core/database"
-	"github.com/condensat/bank-core/messaging"
+	"github.com/condensat/bank-core/database/query"
 
 	"github.com/sirupsen/logrus"
 )
@@ -26,10 +26,10 @@ func CurrencyList(ctx context.Context) (common.CurrencyList, error) {
 
 	// Database Query
 	db := appcontext.Database(ctx)
-	err := db.Transaction(func(db bank.Database) error {
+	err := db.Transaction(func(db database.Context) error {
 
 		// list currencies
-		list, err := database.ListAllCurrency(db)
+		list, err := query.ListAllCurrency(db)
 		if err != nil {
 			log.WithError(err).Error("Failed to ListAllCurrency")
 			return err
@@ -59,15 +59,15 @@ func CurrencyList(ctx context.Context) (common.CurrencyList, error) {
 	return result, err
 }
 
-func OnCurrencyList(ctx context.Context, subject string, message *bank.Message) (*bank.Message, error) {
+func OnCurrencyList(ctx context.Context, subject string, message *messaging.Message) (*messaging.Message, error) {
 	log := logger.Logger(ctx).WithField("Method", "Currencying.OnCurrencyList")
 	log = log.WithFields(logrus.Fields{
 		"Subject": subject,
 	})
 
 	var request common.CurrencyList
-	return messaging.HandleRequest(ctx, message, &request,
-		func(ctx context.Context, _ bank.BankObject) (bank.BankObject, error) {
+	return messaging.HandleRequest(ctx, appcontext.AppName(ctx), message, &request,
+		func(ctx context.Context, _ messaging.BankObject) (messaging.BankObject, error) {
 
 			response, err := CurrencyList(ctx)
 			if err != nil {

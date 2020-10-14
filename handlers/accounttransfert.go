@@ -8,15 +8,15 @@ import (
 	"context"
 
 	"github.com/condensat/bank-core/appcontext"
+	"github.com/condensat/bank-core/cache"
 	"github.com/condensat/bank-core/logger"
+	"github.com/condensat/bank-core/messaging"
 
 	"github.com/condensat/bank-accounting/common"
 
-	"github.com/condensat/bank-core"
-	"github.com/condensat/bank-core/cache"
 	"github.com/condensat/bank-core/database"
 	"github.com/condensat/bank-core/database/model"
-	"github.com/condensat/bank-core/messaging"
+	"github.com/condensat/bank-core/database/query"
 
 	"github.com/sirupsen/logrus"
 )
@@ -25,7 +25,7 @@ func AccountTransfer(ctx context.Context, transfer common.AccountTransfer) (comm
 	db := appcontext.Database(ctx)
 
 	var result common.AccountTransfer
-	err := db.Transaction(func(db bank.Database) error {
+	err := db.Transaction(func(db database.Context) error {
 		var txErr error
 		result, txErr = AccountTransferWithDatabase(ctx, db, transfer)
 		return txErr
@@ -34,7 +34,7 @@ func AccountTransfer(ctx context.Context, transfer common.AccountTransfer) (comm
 	return result, err
 }
 
-func AccountTransferWithDatabase(ctx context.Context, db bank.Database, transfer common.AccountTransfer) (common.AccountTransfer, error) {
+func AccountTransferWithDatabase(ctx context.Context, db database.Context, transfer common.AccountTransfer) (common.AccountTransfer, error) {
 	log := logger.Logger(ctx).WithField("Method", "accounting.AccountTransfer")
 
 	log = log.WithFields(logrus.Fields{
@@ -48,30 +48,30 @@ func AccountTransferWithDatabase(ctx context.Context, db bank.Database, transfer
 	if !isTransfertOperation(model.OperationType(transfer.Destination.OperationType)) {
 		log.
 			Error("OperationType is not transfer")
-		return common.AccountTransfer{}, database.ErrInvalidAccountOperation
+		return common.AccountTransfer{}, query.ErrInvalidAccountOperation
 	}
 	// check for accounts
 	if transfer.Source.AccountID == transfer.Destination.AccountID {
 		log.
 			Error("Can not transfer within same account")
-		return common.AccountTransfer{}, database.ErrInvalidAccountOperation
+		return common.AccountTransfer{}, query.ErrInvalidAccountOperation
 	}
 
 	// check for currencies match
 	{
 		// fetch source account from DB
-		srcAccount, err := database.GetAccountByID(db, model.AccountID(transfer.Source.AccountID))
+		srcAccount, err := query.GetAccountByID(db, model.AccountID(transfer.Source.AccountID))
 		if err != nil {
 			log.WithError(err).
 				Error("Failed to get srcAccount")
-			return common.AccountTransfer{}, database.ErrInvalidAccountOperation
+			return common.AccountTransfer{}, query.ErrInvalidAccountOperation
 		}
 		// fetch destination account from DB
-		dstAccount, err := database.GetAccountByID(db, model.AccountID(transfer.Destination.AccountID))
+		dstAccount, err := query.GetAccountByID(db, model.AccountID(transfer.Destination.AccountID))
 		if err != nil {
 			log.WithError(err).
 				Error("Failed to get dstAccount")
-			return common.AccountTransfer{}, database.ErrInvalidAccountOperation
+			return common.AccountTransfer{}, query.ErrInvalidAccountOperation
 		}
 		// currency must match
 		if srcAccount.CurrencyName != dstAccount.CurrencyName {
@@ -79,7 +79,7 @@ func AccountTransferWithDatabase(ctx context.Context, db bank.Database, transfer
 				"SrcCurrency": srcAccount.CurrencyName,
 				"DstCurrency": dstAccount.CurrencyName,
 			}).Error("Can not transfer currencies")
-			return common.AccountTransfer{}, database.ErrInvalidAccountOperation
+			return common.AccountTransfer{}, query.ErrInvalidAccountOperation
 		}
 	}
 
@@ -127,7 +127,7 @@ func AccountTransferWithDatabase(ctx context.Context, db bank.Database, transfer
 	}
 
 	// Store operations
-	operations, err := database.TxAppendAccountOperationSlice(db,
+	operations, err := query.TxAppendAccountOperationSlice(db,
 		common.ConvertEntryToOperation(transfer.Source),
 		common.ConvertEntryToOperation(transfer.Destination),
 	)
@@ -141,7 +141,7 @@ func AccountTransferWithDatabase(ctx context.Context, db bank.Database, transfer
 	if len(operations) != 2 {
 		log.
 			Error("Invalid operations count")
-		return common.AccountTransfer{}, database.ErrInvalidAccountOperation
+		return common.AccountTransfer{}, query.ErrInvalidAccountOperation
 	}
 
 	source := operations[0]
@@ -154,15 +154,15 @@ func AccountTransferWithDatabase(ctx context.Context, db bank.Database, transfer
 	}, nil
 }
 
-func OnAccountTransfer(ctx context.Context, subject string, message *bank.Message) (*bank.Message, error) {
+func OnAccountTransfer(ctx context.Context, subject string, message *messaging.Message) (*messaging.Message, error) {
 	log := logger.Logger(ctx).WithField("Method", "Accounting.OnAccountTransfer")
 	log = log.WithFields(logrus.Fields{
 		"Subject": subject,
 	})
 
 	var request common.AccountTransfer
-	return messaging.HandleRequest(ctx, message, &request,
-		func(ctx context.Context, _ bank.BankObject) (bank.BankObject, error) {
+	return messaging.HandleRequest(ctx, appcontext.AppName(ctx), message, &request,
+		func(ctx context.Context, _ messaging.BankObject) (messaging.BankObject, error) {
 
 			response, err := AccountTransfer(ctx, request)
 			if err != nil {

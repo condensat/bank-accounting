@@ -7,7 +7,6 @@ package handlers
 import (
 	"context"
 
-	"github.com/condensat/bank-core"
 	"github.com/condensat/bank-core/appcontext"
 	"github.com/condensat/bank-core/cache"
 	"github.com/condensat/bank-core/logger"
@@ -17,6 +16,7 @@ import (
 
 	"github.com/condensat/bank-core/database"
 	"github.com/condensat/bank-core/database/model"
+	"github.com/condensat/bank-core/database/query"
 
 	"github.com/sirupsen/logrus"
 )
@@ -29,8 +29,8 @@ func UserWithdrawList(ctx context.Context, userID uint64) (common.UserWithdraws,
 		UserID: userID,
 	}
 	db := appcontext.Database(ctx)
-	err := db.Transaction(func(db bank.Database) error {
-		withdraws, err := database.FindWithdrawByUser(db, model.UserID(userID))
+	err := db.Transaction(func(db database.Context) error {
+		withdraws, err := query.FindWithdrawByUser(db, model.UserID(userID))
 		if err != nil {
 			log.WithError(err).
 				Error("AddWithdraw failed")
@@ -38,14 +38,14 @@ func UserWithdrawList(ctx context.Context, userID uint64) (common.UserWithdraws,
 		}
 
 		for _, w := range withdraws {
-			wi, err := database.GetLastWithdrawInfo(db, w.ID)
+			wi, err := query.GetLastWithdrawInfo(db, w.ID)
 			if err != nil {
 				log.WithError(err).
 					Error("GetLastWithdrawInfo failed")
 				continue
 			}
 
-			wt, err := database.GetWithdrawTargetByWithdrawID(db, w.ID)
+			wt, err := query.GetWithdrawTargetByWithdrawID(db, w.ID)
 			if err != nil {
 				log.WithError(err).
 					Error("GetWithdrawTargetByWithdrawID failed")
@@ -80,15 +80,15 @@ func UserWithdrawList(ctx context.Context, userID uint64) (common.UserWithdraws,
 	return result, nil
 }
 
-func OnUserWithdrawList(ctx context.Context, subject string, message *bank.Message) (*bank.Message, error) {
+func OnUserWithdrawList(ctx context.Context, subject string, message *messaging.Message) (*messaging.Message, error) {
 	log := logger.Logger(ctx).WithField("Method", "Accounting.OnAccountTransferWithdraw")
 	log = log.WithFields(logrus.Fields{
 		"Subject": subject,
 	})
 
 	var request common.UserWithdraws
-	return messaging.HandleRequest(ctx, message, &request,
-		func(ctx context.Context, _ bank.BankObject) (bank.BankObject, error) {
+	return messaging.HandleRequest(ctx, appcontext.AppName(ctx), message, &request,
+		func(ctx context.Context, _ messaging.BankObject) (messaging.BankObject, error) {
 			response, err := UserWithdrawList(ctx, request.UserID)
 			if err != nil {
 				log.WithError(err).

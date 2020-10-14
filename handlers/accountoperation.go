@@ -8,15 +8,14 @@ import (
 	"context"
 
 	"github.com/condensat/bank-core/appcontext"
+	"github.com/condensat/bank-core/cache"
 	"github.com/condensat/bank-core/logger"
+	"github.com/condensat/bank-core/messaging"
 
 	"github.com/condensat/bank-accounting/common"
 
-	"github.com/condensat/bank-core"
-	"github.com/condensat/bank-core/cache"
-	"github.com/condensat/bank-core/database"
 	"github.com/condensat/bank-core/database/model"
-	"github.com/condensat/bank-core/messaging"
+	"github.com/condensat/bank-core/database/query"
 
 	"github.com/sirupsen/logrus"
 )
@@ -60,7 +59,7 @@ func AccountOperation(ctx context.Context, entry common.AccountEntry) (common.Ac
 		balance = lockAmount
 	}
 
-	op, err := database.AppendAccountOperation(db, model.AccountOperation{
+	op, err := query.AppendAccountOperation(db, model.AccountOperation{
 		AccountID:        accountID,
 		SynchroneousType: model.ParseSynchroneousType(entry.SynchroneousType),
 		OperationType:    model.ParseOperationType(entry.OperationType),
@@ -100,15 +99,15 @@ func AccountOperation(ctx context.Context, entry common.AccountEntry) (common.Ac
 	}, nil
 }
 
-func OnAccountOperation(ctx context.Context, subject string, message *bank.Message) (*bank.Message, error) {
+func OnAccountOperation(ctx context.Context, subject string, message *messaging.Message) (*messaging.Message, error) {
 	log := logger.Logger(ctx).WithField("Method", "Accounting.OnAccountOperation")
 	log = log.WithFields(logrus.Fields{
 		"Subject": subject,
 	})
 
 	var request common.AccountEntry
-	return messaging.HandleRequest(ctx, message, &request,
-		func(ctx context.Context, _ bank.BankObject) (bank.BankObject, error) {
+	return messaging.HandleRequest(ctx, appcontext.AppName(ctx), message, &request,
+		func(ctx context.Context, _ messaging.BankObject) (messaging.BankObject, error) {
 			log = log.WithFields(logrus.Fields{
 				"AccountID": request.AccountID,
 			})
